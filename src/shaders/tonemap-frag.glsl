@@ -15,9 +15,22 @@ void main() {
 	// It does not properly handle HDR values; you must implement that.
 
 	vec3 color = texture(u_frame, fs_UV).xyz;
-	color = min(vec3(1.0), color);
 
-	// gamma correction
-	color = pow(color, vec3(1.0 / 2.2));
-	out_Col = vec4(color, 1.0);
+
+	color *= 16.0;
+	//Reinhardt
+	color = color / (1.0 + color);
+	vec3 retColor = vec3(pow(color.x, 1.0 / 2.2), pow(color.y, 1.0 / 2.2), pow(color.z, 1.0 / 2.2));
+	retColor = color; // removes 1.0/2.2 scaling
+
+
+	// Linear
+	//vec3 retColor = pow(color, 1.0 / 2.2);
+	
+	// Optimized by Jim Hejl and Richard Burgess-Dawson
+	//vec3 x = max(vec3(0.0), color - 0.004);
+	//vec3 retColor = (x * (6.2 * x + 0.5)) / (x * (6.2 * x + 1.7) + 0.06);
+
+
+	out_Col = vec4(retColor, 1.0); 
 }

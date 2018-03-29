@@ -17,6 +17,7 @@ out vec4 fs_Nor;
 out vec4 fs_Col;           
 out vec2 fs_UV;
 
+
 void main()
 {
     fs_Col = vs_Col;
@@ -27,7 +28,13 @@ void main()
     mat3 invTranspose = mat3(u_ModelInvTr);
     mat3 view = mat3(u_View);
     fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);
-    fs_Pos = u_View * u_Model * vs_Pos;
+    // Camera space
+    vec4 fs_pos_temp = u_Proj * u_View * u_Model * (vs_Pos + 0.0);
+    fs_Pos = fs_pos_temp / fs_pos_temp.w;
     
-    gl_Position = u_Proj * u_View * u_Model * vs_Pos;
+
+
+    // NDC space
+    gl_Position = u_Proj * u_View * u_Model * (vs_Pos + 0.0);
+    //gl_Position.z = gl_Position.z - 55.0;
 }

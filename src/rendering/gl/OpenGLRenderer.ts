@@ -33,6 +33,25 @@ class OpenGLRenderer {
 
   currentTime: number; // timer number to apply to all drawing shaders
 
+  currShader: number; // Current shader to add
+
+  changeShader(num : number) {
+    //this.currShader = num;
+    switch(num) {
+      case 0: this.post8Passes.pop();
+      this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthoffield-frag.glsl'))));
+      break;
+      case 1: this.post8Passes.pop();
+      this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloom-frag.glsl'))));
+      break;
+      case 2: this.post8Passes.pop();
+      this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/crosshatch-frag.glsl'))));
+      break;
+      case 3: this.post8Passes.pop();
+      break;
+    }
+  }
+
   // the shader that renders from the gbuffers into the postbuffers
   deferredShader :  PostProcess = new PostProcess(
     new Shader(gl.FRAGMENT_SHADER, require('../../shaders/deferred-render.glsl'))
@@ -66,10 +85,20 @@ class OpenGLRenderer {
     this.post32Passes = [];
 
     // TODO: these are placeholder post shaders, replace them with something good
-    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost-frag.glsl'))));
-    this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost2-frag.glsl'))));
+    // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost-frag.glsl'))));
+    // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost2-frag.glsl'))));
+    
+    
+    // DEPTH OF FIELD
+    // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/depthoffield-frag.glsl'))));
+    // // BLOOM
+    // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloom-frag.glsl'))));
+    // // ARTISITC
+    // this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/crosshatch-frag.glsl'))));
 
-    this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
+
+
+    //this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -87,7 +116,11 @@ class OpenGLRenderer {
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
+
+    
   }
+
+  
 
 
   setClearColor(r: number, g: number, b: number, a: number) {
@@ -312,6 +345,8 @@ class OpenGLRenderer {
 
     this.tonemapPass.draw();
 
+    
+
   }
 
 
@@ -336,9 +371,18 @@ class OpenGLRenderer {
 
       this.post8Passes[i].draw();
 
+      // Pass in gbtargets
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[0]);
+      //
+
+      
+
       // bind default
       gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     }
+
+    
   }
 
 };

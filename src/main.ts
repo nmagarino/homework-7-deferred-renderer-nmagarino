@@ -11,16 +11,19 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture from './rendering/gl/Texture';
 
 // Define an object with application parameters and button callbacks
-// const controls = {
-//   // Extra credit: Add interactivity
-// };
+ const controls = {
+   // Extra credit: Add interactivity
+   postProcess : 'None',
+};
 
 let square: Square;
 
 // TODO: replace with your scene's stuff
 
 let obj0: string;
+let obj1: string;
 let mesh0: Mesh;
+let mesh1: Mesh;
 
 let tex0: Texture;
 
@@ -39,19 +42,24 @@ var timer = {
 
 
 function loadOBJText() {
-  obj0 = readTextFile('../resources/obj/wahoo.obj')
+  obj0 = readTextFile('../resources/obj/wahoo.obj');
+  obj1 = readTextFile('../resources/obj/green_wahoo.obj');
 }
 
 
 function loadScene() {
   square && square.destroy();
   mesh0 && mesh0.destroy();
+  mesh1 && mesh1.destroy();
 
   square = new Square(vec3.fromValues(0, 0, 0));
   square.create();
 
-  mesh0 = new Mesh(obj0, vec3.fromValues(0, 0, 0));
+  mesh0 = new Mesh(obj0, vec3.fromValues(0, 0, -2.0));
   mesh0.create();
+
+  mesh1 = new Mesh(obj1, vec3.fromValues(0, 0, 0));
+  mesh1.create();
 
   tex0 = new Texture('../resources/textures/wahoo.bmp')
 }
@@ -67,7 +75,8 @@ function main() {
   document.body.appendChild(stats.domElement);
 
   // Add controls to the gui
-  // const gui = new DAT.GUI();
+  const gui = new DAT.GUI();
+  gui.add(controls, 'postProcess', ['Depth of Field', 'Bloom', 'Crosshatch', 'None']);
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
@@ -96,6 +105,18 @@ function main() {
   standardDeferred.setupTexUnits(["tex_Color"]);
 
   function tick() {
+    let num : number = 0;
+    switch(controls.postProcess) {
+      case 'Depth of Field': num = 0;
+      break;
+      case 'Bloom': num = 1;
+      break;
+      case 'Crosshatch': num = 2;
+      break;
+      case 'None' : num = 3;
+      break;
+    }
+    renderer.changeShader(num);
     camera.update();
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
@@ -109,7 +130,7 @@ function main() {
 
     // TODO: pass any arguments you may need for shader passes
     // forward render mesh info into gbuffers
-    renderer.renderToGBuffer(camera, standardDeferred, [mesh0]);
+    renderer.renderToGBuffer(camera, standardDeferred, [mesh0, mesh1]);
     // render from gbuffers into 32-bit color buffer
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
